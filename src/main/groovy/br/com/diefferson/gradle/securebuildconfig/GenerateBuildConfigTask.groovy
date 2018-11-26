@@ -119,7 +119,7 @@ class GenerateBuildConfigTask extends DefaultTask {
     * {@code String} or {@code char} values have to be surrounded by quotes.
     * <p>
     * Example:
-    * <code>{@code buildConfigField ('String', 'MY_STR', '"my value"')
+    * <code>{@code secureBuildConfigField ('String', 'MY_STR', '"my value"')
     * }</code>
     * 
     * @param type Type of the field
@@ -128,7 +128,7 @@ class GenerateBuildConfigTask extends DefaultTask {
     * 
     * @see #addClassField(String, String, String)
     */
-   void buildConfigField (String type, String name, String value) {
+   void secureBuildConfigField (String type, String name, String value) {
       addClassField (classFields, new ClassFieldImpl (type, name, value))
    }
 
@@ -170,7 +170,7 @@ class GenerateBuildConfigTask extends DefaultTask {
 
       if (alreadyPresent != null)
       {
-         LOG.debug  "{}: buildConfigField <{}/{}/{}> exists, replacing with <{}/{}/{}>",
+         LOG.debug  "{}: secureBuildConfigField <{}/{}/{}> exists, replacing with <{}/{}/{}>",
          name,
          alreadyPresent.type,
          alreadyPresent.name,

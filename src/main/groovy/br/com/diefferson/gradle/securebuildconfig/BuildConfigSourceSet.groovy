@@ -69,7 +69,7 @@ class BuildConfigSourceSet implements Named {
     * 
     * @return       existing class field for name
     */ 
-   ClassField buildConfigField (String type, String name, String value) {
+   ClassField secureBuildConfigField (String type, String name, String value) {
       addClassField (classFields, new ClassFieldImpl (type, name, value))
    }
    
@@ -83,7 +83,7 @@ class BuildConfigSourceSet implements Named {
     *
     * @return       existing class field for name
     */
-   ClassField buildConfigField (String type, String name, Closure<String> value) {
+   ClassField secureBuildConfigField (String type, String name, Closure<String> value) {
       addClassField (classFields, new ClassFieldClosureImpl (type, name, value))
    }
 

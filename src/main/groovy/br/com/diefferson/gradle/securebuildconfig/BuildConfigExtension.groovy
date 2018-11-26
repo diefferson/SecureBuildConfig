@@ -37,7 +37,7 @@ import org.gradle.api.Project
  *       main
  *       otherSourceSet &lbrace;
  *          appName &equals; &apos;Overridden Appname&apos;
- *          buildConfigField &apos;String&apos;&comma; &apos;UNIQUE&lowbar;FIELD&apos;&comma; &apos;some unique value&apos;
+ *          secureBuildConfigField &apos;String&apos;&comma; &apos;UNIQUE&lowbar;FIELD&apos;&comma; &apos;some unique value&apos;
  *       &rbrace;
  *    &rbrace;
  * &rbrace;
