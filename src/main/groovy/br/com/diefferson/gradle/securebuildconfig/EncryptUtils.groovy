@@ -22,9 +22,6 @@
  */
 package br.com.diefferson.gradle.securebuildconfig
 
-import sun.misc.BASE64Decoder
-import sun.misc.BASE64Encoder
-
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -37,8 +34,7 @@ final class EncryptUtils{
     static String encrypt(String key, String value) {
         try {
             IvParameterSpec iv = new IvParameterSpec("RandomInitVector".getBytes("UTF-8"))
-            String encryptedKey  = encode(key, "RandomInitVector")
-            SecretKeySpec skeySpec = new SecretKeySpec(encryptedKey.getBytes("UTF-8"), "AES")
+            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES")
 
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv)
@@ -58,8 +54,7 @@ final class EncryptUtils{
     static String decrypt(String key, String encrypted) {
         try {
             IvParameterSpec iv = new IvParameterSpec("RandomInitVector".getBytes("UTF-8"))
-            String decryptedKey  = decode(key, "RandomInitVector")
-            SecretKeySpec skeySpec = new SecretKeySpec(decryptedKey.getBytes("UTF-8"), "AES")
+            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES")
 
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv)
@@ -72,35 +67,5 @@ final class EncryptUtils{
         }
 
         return null
-    }
-
-    private static String encode(String s, String key) {
-        return base64Encode(xorWithKey(s.getBytes(), key.getBytes()))
-    }
-
-    private static String decode(String s, String key) {
-        return new String(xorWithKey(base64Decode(s), key.getBytes()))
-    }
-
-    private static byte[] xorWithKey(byte[] a, byte[] key) {
-        byte[] out = new byte[a.length]
-        for (int i = 0; i < a.length; i++) {
-            out[i] = (byte) (a[i] ^ key[i%key.length])
-        }
-        return out
-    }
-
-    private static byte[] base64Decode(String s) {
-        try {
-            BASE64Decoder d = new BASE64Decoder()
-            return d.decodeBuffer(s)
-        } catch (IOException e) {
-            throw new RuntimeException(e)
-        }
-    }
-
-    private static String base64Encode(byte[] bytes) {
-        BASE64Encoder enc = new BASE64Encoder()
-        return enc.encode(bytes).replaceAll("\\s", "")
     }
 }
