@@ -22,97 +22,66 @@
  */
 package br.com.diefferson.gradle.securebuildconfig
 
-import sun.misc.BASE64Decoder
-import sun.misc.BASE64Encoder
-
 import javax.crypto.Cipher
-import javax.crypto.SecretKey
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
-import java.security.spec.KeySpec
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 /**
  * @author Santos Diefferson
  */
 final class EncryptUtils{
 
-    private static final String PASSWORD = "I AM SHERLOCKED"
-    private static final String SALT = "MYSALT"
+    private static SecretKeySpec secretKey
+    private static byte[] key
 
-    static String encrypt(String key, String value) {
+    static void setKey(String myKey)
+    {
+        MessageDigest sha = null
         try {
-            IvParameterSpec iv = new IvParameterSpec("RandomInitVector".getBytes("UTF-8"))
-
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(encode(key, "RandomInitVector"))
-            KeySpec spec = new PBEKeySpec(PASSWORD, SALT, 65536, 256)
-            SecretKey tmp = factory.generateSecret(spec);
-            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES")
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
-            cipher.init(Cipher.ENCRYPT_MODE, secret, iv)
-
-            byte[] encrypted = cipher.doFinal(value.getBytes())
-            System.out.println("encrypted string: "
-                    + Base64.encodeBase64String(encrypted))
-
-            return Base64.encodeBase64String(encrypted)
-        } catch (Exception ex) {
-            ex.printStackTrace()
+            key = myKey.getBytes("UTF-8")
+            sha = MessageDigest.getInstance("SHA-1")
+            key = sha.digest(key)
+            key = Arrays.copyOf(key, 16)
+            secretKey = new SecretKeySpec(key, "AES")
         }
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace()
+        }
+        catch (UnsupportedEncodingException e) {
+            e.printStackTrace()
+        }
+    }
 
+    static String encrypt(String strToEncrypt, String secret)
+    {
+        try
+        {
+            setKey(secret)
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding")
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+            return Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")))
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error while encrypting: " + e.toString())
+        }
         return null
     }
 
-    static String decrypt(String key, String encrypted) {
-        try {
-            IvParameterSpec iv = new IvParameterSpec("RandomInitVector".getBytes("UTF-8"))
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(encode(key, "RandomInitVector"))
-            KeySpec spec = new PBEKeySpec(PASSWORD, SALT, 65536, 256)
-            SecretKey tmp = factory.generateSecret(spec);
-            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES")
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
-            cipher.init(Cipher.DECRYPT_MODE, secret, iv)
-
-            byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted))
-
-            return new String(original)
-        } catch (Exception ex) {
-            ex.printStackTrace()
+    static String decrypt(String strToDecrypt, String secret)
+    {
+        try
+        {
+            setKey(secret)
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING")
+            cipher.init(Cipher.DECRYPT_MODE, secretKey)
+            return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)))
         }
-
+        catch (Exception e)
+        {
+            System.out.println("Error while decrypting: " + e.toString())
+        }
         return null
-    }
-
-    private static String encode(String s, String key) {
-        return base64Encode(xorWithKey(s.getBytes(), key.getBytes()))
-    }
-
-    private static String decode(String s, String key) {
-        return new String(xorWithKey(base64Decode(s), key.getBytes()))
-    }
-
-    private static byte[] xorWithKey(byte[] a, byte[] key) {
-        byte[] out = new byte[a.length]
-        for (int i = 0; i < a.length; i++) {
-            out[i] = (byte) (a[i] ^ key[i%key.length])
-        }
-        return out
-    }
-
-    private static byte[] base64Decode(String s) {
-        try {
-            BASE64Decoder d = new BASE64Decoder()
-            return d.decodeBuffer(s)
-        } catch (IOException e) {
-            throw new RuntimeException(e)
-        }
-    }
-
-    private static String base64Encode(byte[] bytes) {
-        BASE64Encoder enc = new BASE64Encoder()
-        return enc.encode(bytes).replaceAll("\\s", "")
     }
 }
