@@ -1,23 +1,20 @@
+import java.text.SimpleDateFormat
+
 plugins {
-    id "com.gradle.plugin-publish" version "0.10.0"
+    id 'groovy'
+    id 'maven'
+    id "com.gradle.plugin-publish" version "0.9.7"
 }
 
-apply plugin: "groovy"
-apply plugin: "maven"
-
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
-sourceCompatibility = '1.8'
+sourceCompatibility = '1.7'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 if (!hasProperty('mainClass')) {
     ext.mainClass = ''
 }
 
 group = 'br.com.diefferson'
-version = '1.0.4'
+version = '1.0.5'
 
 repositories {
     mavenCentral()
@@ -40,15 +37,24 @@ task createClasspathManifest {
     }
 }
 
-dependencies {
-    provided gradleApi()
-    testCompile group: 'junit', name: 'junit', version: '4.10'
-    testCompile ('org.spockframework:spock-core:1.0-groovy-2.4') {
-        exclude module : 'groovy-all'
-    }
-    testCompile gradleTestKit()
-    testRuntime files(createClasspathManifest)
+task copyBintrayTemplate (type: Copy) {
+    from "${projectDir}/templates"
+    into "${project.buildDir}"
+    include 'bintray.json.template'
+    rename { file -> 'bintray.json' }
+    expand (version: version, releasedate: releaseDate (), mavenRepositoryPath: mavenRepositoryPath ())
 }
+
+task copyPOMTemplate (type: Copy) {
+    from "${projectDir}/templates"
+    into "${buildDir}/libs"
+    include 'pom.xml.template'
+    rename { file -> "${project.name}-${project.version}.pom" }
+    expand (version: version)
+}
+
+assemble.dependsOn copyBintrayTemplate
+assemble.dependsOn copyPOMTemplate
 
 
 pluginBundle {
@@ -69,6 +75,7 @@ pluginBundle {
     }
 }
 
+
 task wrapper(type: Wrapper) {
     gradleVersion = '3.3'
 }
@@ -79,4 +86,14 @@ test {
         exceptionFormat "full"
         showStandardStreams = true
     }
+}
+
+def mavenRepositoryPath ()
+{
+    "gradle/plugin/br/com/diefferson/SecureBuildConfig/${version}/"
+}
+
+def releaseDate ()
+{
+    new SimpleDateFormat("yyyy-MM-dd").format (new Date())
 }
