@@ -3,8 +3,6 @@ plugins {
 }
 
 apply plugin: "groovy"
-apply plugin: "java-gradle-plugin"
-apply plugin: "jacoco"
 apply plugin: "maven"
 
 repositories {
@@ -12,9 +10,7 @@ repositories {
     mavenLocal()
 }
 
-
 sourceCompatibility = '1.8'
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 if (!hasProperty('mainClass')) {
     ext.mainClass = ''
