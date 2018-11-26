@@ -33,6 +33,11 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import static br.com.diefferson.gradle.securebuildconfig.SecureBuildConfig.DEFAULT_CLASS_NAME
+import static br.com.diefferson.gradle.securebuildconfig.SecureBuildConfig.DEFAULT_NAME_FIELDNAME
+import static br.com.diefferson.gradle.securebuildconfig.SecureBuildConfig.DEFAULT_PACKAGENAME
+import static br.com.diefferson.gradle.securebuildconfig.SecureBuildConfig.DEFAULT_SOURCESET
+import static br.com.diefferson.gradle.securebuildconfig.SecureBuildConfig.DEFAULT_VERSION_FIELDNAME
 
 /**
  * @author Santos Diefferson
@@ -100,12 +105,12 @@ class GenerateBuildConfigTask extends DefaultTask {
 
    GenerateBuildConfigTask () {
       /* configure defaults */
-      version = project.version
-      packageName = project.group ?: br.com.diefferson.gradle.buildconfig.SecureBuildConfig.getDEFAULT_PACKAGENAME
-      clsName = br.com.diefferson.gradle.buildconfig.SecureBuildConfig.getDEFAULT_CLASS_NAME
-      appName = project.name
-      sourceSet = br.com.diefferson.gradle.buildconfig.SecureBuildConfig.getDEFAULT_SOURCESET
-      charset = DEFAULT_CHARSET
+       version = project.version
+       packageName = project.group ?: DEFAULT_PACKAGENAME
+       clsName = DEFAULT_CLASS_NAME
+       appName = project.name
+       sourceSet = DEFAULT_SOURCESET
+       charset = DEFAULT_CHARSET
       
       LOG.debug "{}: GenerateBuildConfigTask created", name
    }
@@ -189,8 +194,8 @@ class GenerateBuildConfigTask extends DefaultTask {
     */
    private Map<String, ClassField> mergeClassFields () {
       Map<String, ClassField> merged = new LinkedHashMap<> ()
-      addClassField (merged, new ClassFieldImpl ("String", br.com.diefferson.gradle.buildconfig.SecureBuildConfig.getDEFAULT_VERSION_FIELDNAME, version))
-      addClassField (merged, new ClassFieldImpl ("String", br.com.diefferson.gradle.buildconfig.SecureBuildConfig.getDEFAULT_NAME_FIELDNAME, appName))
+      addClassField (merged, new ClassFieldImpl ("String", DEFAULT_VERSION_FIELDNAME, version))
+      addClassField (merged, new ClassFieldImpl ("String", DEFAULT_NAME_FIELDNAME, appName))
       classFields.values ().each { cf ->
          addClassField (merged, cf)
       }
