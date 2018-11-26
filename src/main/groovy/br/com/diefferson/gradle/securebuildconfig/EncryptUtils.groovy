@@ -22,22 +22,36 @@
  */
 package br.com.diefferson.gradle.securebuildconfig
 
+import sun.misc.BASE64Decoder
+import sun.misc.BASE64Encoder
+
 import javax.crypto.Cipher
+import javax.crypto.SecretKey
+import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import java.security.spec.KeySpec
 
 /**
  * @author Santos Diefferson
  */
 final class EncryptUtils{
 
+    private static final String PASSWORD = "I AM SHERLOCKED"
+    private static final String SALT = "MYSALT"
+
     static String encrypt(String key, String value) {
         try {
             IvParameterSpec iv = new IvParameterSpec("RandomInitVector".getBytes("UTF-8"))
-            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES")
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(encode(key, "RandomInitVector"))
+            KeySpec spec = new PBEKeySpec(PASSWORD, SALT, 65536, 256)
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES")
 
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
-            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv)
+            cipher.init(Cipher.ENCRYPT_MODE, secret, iv)
 
             byte[] encrypted = cipher.doFinal(value.getBytes())
             System.out.println("encrypted string: "
@@ -54,10 +68,13 @@ final class EncryptUtils{
     static String decrypt(String key, String encrypted) {
         try {
             IvParameterSpec iv = new IvParameterSpec("RandomInitVector".getBytes("UTF-8"))
-            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES")
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(encode(key, "RandomInitVector"))
+            KeySpec spec = new PBEKeySpec(PASSWORD, SALT, 65536, 256)
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKey secret = new SecretKeySpec(tmp.getEncoded(), "AES")
 
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
-            cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv)
+            cipher.init(Cipher.DECRYPT_MODE, secret, iv)
 
             byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted))
 
@@ -67,5 +84,35 @@ final class EncryptUtils{
         }
 
         return null
+    }
+
+    private static String encode(String s, String key) {
+        return base64Encode(xorWithKey(s.getBytes(), key.getBytes()))
+    }
+
+    private static String decode(String s, String key) {
+        return new String(xorWithKey(base64Decode(s), key.getBytes()))
+    }
+
+    private static byte[] xorWithKey(byte[] a, byte[] key) {
+        byte[] out = new byte[a.length]
+        for (int i = 0; i < a.length; i++) {
+            out[i] = (byte) (a[i] ^ key[i%key.length])
+        }
+        return out
+    }
+
+    private static byte[] base64Decode(String s) {
+        try {
+            BASE64Decoder d = new BASE64Decoder()
+            return d.decodeBuffer(s)
+        } catch (IOException e) {
+            throw new RuntimeException(e)
+        }
+    }
+
+    private static String base64Encode(byte[] bytes) {
+        BASE64Encoder enc = new BASE64Encoder()
+        return enc.encode(bytes).replaceAll("\\s", "")
     }
 }
