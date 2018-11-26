@@ -1,10 +1,17 @@
-import java.text.SimpleDateFormat
-
 plugins {
-    id 'groovy'
-    id 'maven'
-    id "com.gradle.plugin-publish" version "0.9.7"
+    id "com.gradle.plugin-publish" version "0.10.0"
 }
+
+apply plugin: "groovy"
+apply plugin: "java-gradle-plugin"
+apply plugin: "jacoco"
+apply plugin: "maven"
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
 
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -14,7 +21,7 @@ if (!hasProperty('mainClass')) {
 }
 
 group = 'br.com.diefferson'
-version = '1.0.2'
+version = '1.0.3'
 
 repositories {
     mavenCentral()
@@ -48,34 +55,6 @@ dependencies {
 }
 
 
-jar {
-    dependsOn configurations.runtime
-    from {
-        (configurations.runtime - configurations.provided).collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-}
-
-task copyBintrayTemplate (type: Copy) {
-    from "${projectDir}/templates"
-    into "${project.buildDir}"
-    include 'bintray.json.template'
-    rename { file -> 'bintray.json' }
-    expand (version: version, releasedate: releaseDate (), mavenRepositoryPath: mavenRepositoryPath ())
-}
-
-task copyPOMTemplate (type: Copy) {
-    from "${projectDir}/templates"
-    into "${buildDir}/libs"
-    include 'pom.xml.template'
-    rename { file -> "${project.name}-${project.version}.pom" }
-    expand (version: version)
-}
-
-assemble.dependsOn copyBintrayTemplate
-assemble.dependsOn copyPOMTemplate
-
 pluginBundle {
     // These settings are set for the whole plugin bundle
     website = 'https://github.com/diefferson/SecureBuildConfig'
@@ -104,14 +83,4 @@ test {
         exceptionFormat "full"
         showStandardStreams = true
     }
-}
-
-def mavenRepositoryPath ()
-{
-    "gradle/plugin/br/com/diefferson/SecureBuildConfig/${version}/"
-}
-
-def releaseDate ()
-{
-    new SimpleDateFormat("yyyy-MM-dd").format (new Date())
 }
